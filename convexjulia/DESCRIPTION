@@ -1,0 +1,11 @@
+Package: convexjulia
+Title: Call Convex.jl from R.
+Version: 1.0
+Authors@R: "Jacob Bien <jbien@cornell.edu> [aut, cre]"
+Description: Convex.jl is a package in julia for solving Disciplined Convex
+    Programs.  The R package convexjulia is a convenient way to use Convex.jl
+    from R.
+Depends:
+    R (>= 3.0.2)
+License: GPL-3
+LazyData: true
