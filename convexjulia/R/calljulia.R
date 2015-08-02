@@ -22,14 +22,16 @@
 #' @param norun Default \code{FALSE}.  Mostly for debugging purposes.  Returns
 #'   the command that would be run in julia without it actually opening julia.
 #' @param julia.call How julia can be invoked through the \code{system} command.
-#'   Default: \code{"julia"}. However, even if this is the alias in your default
-#'   shell, \code{system} might use a different shell in which \code{"julia"} is
-#'   not recognized. For example, in OS X this might be something like
-#'   \code{"/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin/julia"}
+#'   Default: \code{"julia"}. In OS X this might be something like
+#'   \code{"/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin/julia"}.
+#'   However, this argument does not need to be provided if ~/.profile (for OSX)
+#'   has the line export
+#'   PATH=/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin:$PATH
 #' @return Returns the following: \describe{
 #' \item{\code{outputs}}{List containing all variables that were listed in
-#' \code{output.names} with the values they have after \code{julia.code} was executed
-#' in Julia} \item{\code{command}}{the string that is run on the command line.}}
+#' \code{output.names} with the values they have after \code{julia.code} was
+#' executed in Julia} \item{\code{command}}{the string that is run on the
+#' command line.}}
 #' @seealso \code{\link{callconvex}} \code{\link{callconvex.varyparams}}
 #' @examples
 #' \dontrun{
@@ -41,13 +43,13 @@
 #'    output.names=c("y", "z"), julia.call = julia)
 #' range(jl$y - x)
 #' }
-calljulia <- function(julia.code, inputs=list(), output.names=NULL,
-                      delete.temp=TRUE, norun=FALSE,
+calljulia <- function(julia.code, inputs = list(), output.names = NULL,
+                      delete.temp = TRUE, norun = FALSE,
                       julia.call="julia") {
   infiles <- outfiles <- NULL
   if ("time_elapsed" %in% output.names) stop("'time_elapsed' is an invalid name.")
-  before <- paste("# This .jl file was automatically created by the R function",
-                  "'CallJulia' on", Sys.Date(), "\n")
+  before <- paste("# This .jl file was automatically created by the R package",
+                  "'convexjulia' on", Sys.Date(), "\n")
   before <- sprintf("%s\n# Read data into Julia:", before)
   if (length(inputs) > 0) {
     for (i in seq(length(inputs))) {
@@ -140,16 +142,22 @@ processinput <- function(input, input.name) {
 #' @param const.vars list of non-optimization variables used in expression.
 #'   Labels of list elements should be the names of the variables.
 #' @param opt.var.names array of names of optimization variables to return.
-#' @param pr.solve string of code for solving problem \code{pr}
+#' @param pr.solve string of code for solving problem \code{pr}. This can be
+#'   to specify the solver used, for example.
+#' @param code.before optional string of julia code to run before solving
+#'   problem
+#' @param code.after optional string of julia code to run after solving
+#'   problem
 #' @param delete.temp Default \code{TRUE}.  Indicates whether the temporary
 #'   files that are created should be deleted.
 #' @param norun Default \code{FALSE}.  Mostly for debugging purposes.  Returns
 #'   the command that would be run in julia without it actually opening julia.
 #' @param julia.call How julia can be invoked through the \code{system} command.
-#'   Default: \code{"julia"}. However, even if this is the alias in your default
-#'   shell, \code{system} might use a different shell in which \code{"julia"} is
-#'   not recognized. For example, in OS X this might be something like
-#'   \code{"/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin/julia"}
+#'   Default: \code{"julia"}. In OS X this might be something like
+#'   \code{"/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin/julia"}.
+#'   However, this argument does not need to be provided if ~/.profile (for OSX)
+#'   has the line export
+#'   PATH=/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin:$PATH
 #' @return Returns \code{optval} and \code{status} from Convex.jl in addition to
 #'   optimal values of variables named in \code{opt.var.names}.
 #' @references
@@ -186,14 +194,18 @@ processinput <- function(input, input.name) {
 #'                     opt.var.names = "b", julia.call = julia)
 #' }
 callconvex <- function(opt.vars, pr.def, const.vars, opt.var.names,
-                       pr.solve = "solve!(pr)", delete.temp = FALSE,
-                       norun = FALSE, julia.call = "julia") {
-  jl.code <- sprintf("using Convex\n%s\n%s\n%s", opt.vars, pr.def, pr.solve)
+                       pr.solve = "solve!(pr)", code.before = "",
+                       code.after = "", delete.temp = TRUE, norun = FALSE,
+                       julia.call = "julia") {
+  jl.code <- sprintf("using Convex\n%s\n%s\n%s\n%s", code.before, opt.vars,
+                     pr.def, pr.solve)
   jl.code <- sprintf("%s\nstatus=string(pr.status)\noptval=pr.optval", jl.code)
+  jl.code <- sprintf("%s\n%s", jl.code, code.after)
   sol <- calljulia(jl.code,
                    inputs = const.vars,
                    output.names = c(paste(opt.var.names, ".value", sep=""),
                                     "optval", "status"),
+                   delete.temp = delete.temp,
                    norun = norun, julia.call = julia.call)
   for (nam in opt.var.names) {
     sol[[nam]] <- sol[[paste(nam, ".value", sep = "")]]
@@ -221,7 +233,12 @@ callconvex <- function(opt.vars, pr.def, const.vars, opt.var.names,
 #'   parameter; if a matrix, then each column is a vector-parameter. The problem
 #'   will be solved at each such level.
 #' @param opt.var.names array of names of optimization variables to return.
-#' @param pr.solve string of code for solving problem \code{pr}
+#' @param pr.solve string of code for solving problem \code{pr}. This can be
+#'   to specify the solver used, for example.
+#' @param code.before optional string of julia code to run before solving
+#'   problems
+#' @param code.after optional string of julia code to run after solving
+#'   problems
 #' @param delete.temp Default TRUE.  Indicates whether the temporary files that
 #'   are created should be deleted.
 #' @param norun Default FALSE.  Mostly for debugging purposes.  Returns the
@@ -266,31 +283,9 @@ callconvex <- function(opt.vars, pr.def, const.vars, opt.var.names,
 #' }
 callconvex.varyparams <- function(opt.vars, pr.def, const.vars, vary.param,
                                  opt.var.names, pr.solve = "solve!(pr)",
+                                 code.before = "", code.after = "",
                                  norun=FALSE, julia.call = "julia",
                                  delete.temp = TRUE) {
-  # Like callconvex but allows a sequence of problems to be
-  # performed that are identical except that a single parameter is varied.
-  # The parameter varied can be scalar or vector valued.
-  #
-  # Args:
-  #  opt.vars: string of code to declare optimization variables
-  #  pr.def: string of code defining a problem called 'pr'
-  #  const.vars: list of non-optimization variables used in expression.
-  #              Labels of list elements should be the names of the variables.
-  #  vary.param: list with a single vector (with a name). E.g.
-  #              list(lam=c(0.1, 1, 2)). This is a non-optimization variable
-  #              used in CVX expression that you want varied. If a vector, then
-  #              each element is a parameter; if a matrix, then each column is
-  #              a vector-parameter. The problem will be solved at each such
-  #              level.
-  #  opt.var.names: array of names of optimization variables to return.
-  #  pr.solve: string of code for solving problem 'pr'
-  #  norun: doesn't call Julia.  Returns the command that would be run in Julia.
-  #  julia.call: how Julia can be invoked through "system" command.
-  #  delete.temp: whether to delete temporary files.
-  #
-  # Returns:
-  #   optval, status, and an optimal point found by Convex.jl
   if (class(vary.param) != "list" || length(vary.param) != 1)
     stop("vary.param must be a list with a single element.")
   stopifnot(class(vary.param[[1]]) %in% c("numeric", "matrix"))
@@ -299,7 +294,7 @@ callconvex.varyparams <- function(opt.vars, pr.def, const.vars, vary.param,
   param.name <- names(vary.param)
   # add vary.param to const.vars:
   const.vars[[sprintf("%s_all", param.name)]] <- vary.param[[1]]
-  code <- sprintf("using Convex\n%s\n", opt.vars)
+  code <- sprintf("using Convex\n%s\n%s\n", code.before, opt.vars)
   if (is.matrix(vary.param[[1]])) nprob <- ncol(vary.param[[1]])
   else nprob <- length(vary.param[[1]])
   code <- sprintf("%soptval = zeros(%s)\n", code, nprob)
@@ -317,6 +312,7 @@ callconvex.varyparams <- function(opt.vars, pr.def, const.vars, vary.param,
   }
   code <- sprintf("%s  status[iter] = string(pr.status)\n", code)
   code <- sprintf("%s  optval[iter] = pr.optval\n", code)
+  code <- sprintf("%s  %s\n", code, code.after)
   for (nam in opt.var.names) {
     file <- sprintf("temp_out_%s_$iter.txt", nam)
     code <- sprintf("%s  writedlm(\"%s\", %s.value)\n", code, file, nam)
