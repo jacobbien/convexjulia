@@ -23,10 +23,11 @@
 #'   the command that would be run in julia without it actually opening julia.
 #' @param julia.call How julia can be invoked through the \code{system} command.
 #'   Default: \code{"julia"}. In OS X this might be something like
-#'   \code{"/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin/julia"}.
+#'   \code{"/Applications/Julia-0.5.app/Contents/Resources/julia/bin/julia"}.
 #'   However, this argument does not need to be provided if ~/.profile (for OSX)
 #'   has the line export
-#'   PATH=/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin:$PATH
+#'   PATH=/Applications/Julia-0.5.app/Contents/Resources/julia/bin:$PATH
+#'   where "0.5" would be replaced with whatever version of Julia you have.
 #' @return Returns the following: \describe{
 #' \item{\code{outputs}}{List containing all variables that were listed in
 #' \code{output.names} with the values they have after \code{julia.code} was
@@ -155,10 +156,11 @@ processinput <- function(input, input.name) {
 #'   the command that would be run in julia without it actually opening julia.
 #' @param julia.call How julia can be invoked through the \code{system} command.
 #'   Default: \code{"julia"}. In OS X this might be something like
-#'   \code{"/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin/julia"}.
+#'   \code{"/Applications/Julia-0.5.app/Contents/Resources/julia/bin/julia"}.
 #'   However, this argument does not need to be provided if ~/.profile (for OSX)
 #'   has the line export
-#'   PATH=/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin:$PATH
+#'   PATH=/Applications/Julia-0.5.app/Contents/Resources/julia/bin:$PATH
+#'   where "0.5" would be replaced with whatever version of Julia you have.
 #' @return Returns \code{optval} and \code{status} from Convex.jl in addition to
 #'   optimal values of variables named in \code{opt.var.names}.
 #' @references
