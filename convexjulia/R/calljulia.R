@@ -116,7 +116,8 @@ processinput <- function(input, input.name) {
   before <- sprintf("%s\n%s = readdlm(\"%s\")\n", before, input.name, file)
   if (isint) {
     # this input was integer valued in R, so make it a Int in julia:
-    before <- sprintf("%s%s = int(%s)\n", before, input.name, input.name)
+    before <- sprintf("%s%s = [Int(_tempp_%s) for _tempp_%s in %s]\n", before,
+                      input.name, input.name, input.name, input.name)
   }
   # perform the equivalent of "drop" in R:
   before <- sprintf("%sdim = size(%s)\n", before, input.name)
