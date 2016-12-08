@@ -301,7 +301,7 @@ callconvex.varyparams <- function(opt.vars, pr.def, const.vars, vary.param,
   if (is.matrix(vary.param[[1]])) nprob <- ncol(vary.param[[1]])
   else nprob <- length(vary.param[[1]])
   code <- sprintf("%soptval = zeros(%s)\n", code, nprob)
-  code <- sprintf("%sstatus = Array(ASCIIString, %s)\n", code, nprob)
+  code <- sprintf("%sstatus = Array(String, %s)\n", code, nprob)
   # create for loop that varies parameter
   code <- sprintf("%sfor iter = 1:%s\n", code, nprob)
   if (is.matrix(vary.param[[1]])) {
