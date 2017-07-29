@@ -65,4 +65,3 @@ range(jl$y - x)
 \seealso{
 \code{\link{callconvex}} \code{\link{callconvex.varyparams}}
 }
-

@@ -63,13 +63,13 @@ y <- x \%*\% beta + 0.1 * rnorm(n)
 # change this next line based on where julia is located:
 julia <- "/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin/julia"
 # solve the lasso:
-pr.def <- "pr = minimize(sum_squares(y - x * b) + lam * norm(b, 1))"
+pr.def <- "pr = minimize(sumsquares(y - x * b) + lam * norm(b, 1))"
 lasso <- callconvex(opt.vars = "b = Variable(p)",
                     pr.def = pr.def,
                     const.vars = list(x = x, y = y, lam = 10, p = p),
                     opt.var.names = "b", julia.call = julia)
 # solve the lasso in bound form:
-pr.def2 <- paste("pr = minimize(sum_squares(y - x * b))",
+pr.def2 <- paste("pr = minimize(sumsquares(y - x * b))",
                  "pr.constraints += norm(b, 1) <= s", sep = ";")
 lasso.bnd <- callconvex(opt.vars = "b = Variable(p)",
                     pr.def = pr.def2,
@@ -90,4 +90,3 @@ Springer US, 2006.
 \seealso{
 \code{\link{callconvex.varyparams}}
 }
-

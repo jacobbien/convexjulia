@@ -70,7 +70,7 @@ beta <- rnorm(p)
 y <- x \%*\% beta + 0.1 * rnorm(n)
 julia <- "/Applications/Julia-0.3.3.app/Contents/Resources/julia/bin/julia"
 # vary lambda for the lasso (with an unpenalized intercept)
-pr.def <- "pr = minimize(sum_squares(y - b0 - x * b) + lam * norm(b, 1))"
+pr.def <- "pr = minimize(sumsquares(y - b0 - x * b) + lam * norm(b, 1))"
 opt.vars <- "b = Variable(p); b0 = Variable(1)"
 lasso <- callconvex.varyparams(opt.vars = opt.vars, pr.def = pr.def,
                               const.vars = list(x = x, y = y, p = p),
@@ -92,4 +92,3 @@ Springer US, 2006.
 \seealso{
 \code{\link{callconvex}}
 }
-
